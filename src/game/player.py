@@ -1,0 +1,3 @@
+"""
+subclasses: HumanPlayer, BotPlayer
+"""
