@@ -9,6 +9,6 @@
 [] Model Move (src/game/move.py)
 	- drop or pop
 
-[] Implement MCTS function (/src/game/mcts/mcts.py)
+[] Implement MCTS function (/src/mcts/mcts.py)
 	- `def run_mcts(state: Board, n_simulations: int) -> Move`
 	- src/game/mcts/mcts.py
