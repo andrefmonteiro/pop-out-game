@@ -1,4 +1,11 @@
 """
 - pop(column: int)
-- drop move(column: int)
+- put(column: int)
 """
+class Move:
+
+	def pop(col: int):
+		pass
+
+	def put(col: int):
+		pass
