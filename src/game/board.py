@@ -14,7 +14,7 @@ pass the player's Move and if it yields True, then we apply the move
 
 
 class Board:
-    def get_winner():
+    def get_winner(self):
         # returns 1, 2 or 0 (in case of a tie)
         pass
 

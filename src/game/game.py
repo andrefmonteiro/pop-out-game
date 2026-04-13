@@ -5,5 +5,5 @@ stateless class?, only controls the while loop
 """
 class Game:
 
-	def run():
+	def run(self):
 		pass
