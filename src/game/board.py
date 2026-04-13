@@ -18,9 +18,9 @@ class Board:
         # returns 1, 2 or 0 (in case of a tie)
         pass
 
-	def apply_move(move: Move):
-		# this func gets conditionally called
-		pass
+        def apply_move(move: Move):
+            # this func gets conditionally called
+            pass
 
     def __init__(self):
         # grid with numpy array: 6 height * 7 width - it's indexed by a tuple of ints
