@@ -7,3 +7,6 @@ class Game:
 
 	def run(self):
 		pass
+
+	def __init__(self):
+		pass
