@@ -12,9 +12,10 @@ should play_move() be called get_move() instead, as the move only gets played on
 
 class Player:
 
-    def play_move(self):
+    def get_move(self):
         # when HumanPlayer extends this class, we overwrite this method so that we get terminal input
         pass
 
 
 class HumanPlayer(Player):
+	pass
