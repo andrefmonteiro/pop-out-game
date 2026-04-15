@@ -4,8 +4,8 @@
 """
 class Move:
 
-	def pop(col: int):
+	def pop(self, col: int):
 		pass
 
-	def put(col: int):
+	def put(self, col: int):
 		pass
