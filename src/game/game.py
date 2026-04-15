@@ -1,7 +1,10 @@
 class Game: # stateless class, only controls the while loop
 
 	def run(self):
-		pass
+		# create player instance
+		curr_move = player.get_move()
+		self.board = self.board.apply_move(curr_move) # create immutable object, instead of mutating the same Board instance
+		# if winner
 
 	def __init__(self):
 		pass
