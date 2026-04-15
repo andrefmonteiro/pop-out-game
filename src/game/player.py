@@ -1,12 +1,12 @@
+from move import Move
+
+
 """
 subclasses: HumanPlayer, BotPlayer
-play_move(Move: player_move)
 
 can we simplify and just have:
 - a class BotPlayer whose play_move() calls the mcts function
 - a class HumanPlayer whose play_move() gets terminal input
-
-should play_move() be called get_move() instead, as the move only gets played once we check if it's legal with the 
 """
 
 
@@ -17,5 +17,17 @@ class Player:
         pass
 
 
+move_type = input("Drop (D)\nor\nPop(P)\n")
+col = input("Column number:\n")
+
+
 class HumanPlayer(Player):
-	pass
+	# get terminal input
+	def get_move(self) -> Move:
+		# gets terminal input
+		pass
+
+class BotPlayer(Player):
+	def get_move(self) -> Move:
+		# calls	MCTS
+		pass
