@@ -1,14 +1,6 @@
 import numpy as np
 from move import Move
 
-"""
-get_winner() → int | None # avaliar resultado
-apply_move(move) → Board # devolver Board novo
-
-get_legal_moves() → [Move]
-we get a list of Moves and check if the player's move belongs in the list
-"""
-
 
 class Board:
 
@@ -17,9 +9,10 @@ class Board:
 		pass
 	
 	def get_legal_moves(self) -> list[Move]:
+	# get a list of Moves and check if the player's move belongs in the list
 		pass
 	
-	def apply_move(self, move: Move):
+	def apply_move(self, move: Move) -> Board:
 		pass
 
 	def __str__(self):
