@@ -1,11 +1,9 @@
-"""
-- pop(column: int)
-- put(column: int)
-"""
-class Move:
+from dataclasses import dataclass
+from enum import Enum
 
-	def pop(self, col: int):
-		pass
+MoveType = Enum('MoveType', [("DROP", "d"), ("POP", "p")])
 
-	def put(self, col: int):
-		pass
+@dataclass
+class Move: # acting basically as a named tuple
+	move_type: MoveType
+	col: int
