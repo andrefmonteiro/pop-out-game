@@ -1,33 +1,16 @@
-from move import Move
-
-
-"""
-subclasses: HumanPlayer, BotPlayer
-
-can we simplify and just have:
-- a class BotPlayer whose play_move() calls the mcts function
-- a class HumanPlayer whose play_move() gets terminal input
-"""
-
+from mcts.mcts import mcts_search
+from game.move import Move, MoveType
 
 class Player:
-
-    def get_move(self):
-        # when HumanPlayer extends this class, we overwrite this method so that we get terminal input
+    def get_move(self, board, is_game_drawable):
         pass
 
-
-move_type = input("Drop (D)\nor\nPop(P)\n")
-col = input("Column number:\n")
-
+class BotPlayer(Player):
+    def get_move(self, board, is_game_drawable) -> Move:
+        # Podes aumentar as iterações (ex: 2000) para o bot ser mais forte[cite: 1]
+        return mcts_search(board, iterations=1000)
 
 class HumanPlayer(Player):
-	# get terminal input
-	def get_move(self) -> Move:
-		# gets terminal input
-		pass
-
-class BotPlayer(Player):
-	def get_move(self) -> Move:
-		# calls	MCTS
-		pass
+    def get_move(self, board, is_game_drawable) -> Move:
+        # Implementação para ler do terminal (D/P e Coluna)
+        pass

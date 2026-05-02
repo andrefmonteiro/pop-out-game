@@ -1,48 +1,48 @@
-from board import Board
-from player import HumanPlayer, BotPlayer
+from game.board import Board
+from game.player import HumanPlayer, BotPlayer
 
-class Game: # stateless class, only controls the while loop
+class Game:
+    def __init__(self):
+        self.board = Board()
+        self.players = []
 
-	def run(self):
-		self.setup_game_mode()
-		curr_player_idx = 0
-		is_game_drawable = False
-		# we also need to hold state for the board states because of
+    def setup_game_mode(self):
+        print("1. Human vs Human\n2. Human vs Bot\n3. Bot vs Bot")
+        mode = input("Escolha o modo: ")
+        if mode == "1":
+            self.players = [HumanPlayer(), HumanPlayer()]
+        elif mode == "2":
+            self.players = [HumanPlayer(), BotPlayer()]
+        else:
+            self.players = [BotPlayer(), BotPlayer()]
 
-		while True:
-			print(self.board)
-			curr_player = self.players[curr_player_idx]
-			move = curr_player.get_move(self.board, is_game_drawable) # it's fine to pass this board object reference to the HumanPlayer, as it wont use it
-			self.board = self.board.apply_move(move) 
-			result = self.board.get_winner() # 1, 2 or draw
-			if result:
-				break
-			else:
-				curr_player_idx = 1 - curr_player_idx
-		
-		if result == 1 or result == 2:
-			print(f"Player {curr_player_idx + 1} won!")
-		elif result == "draw":
-			print("The game is a tie.")
+    def run(self):
+        self.setup_game_mode()
+        curr_idx = 0
+        
+        while True:
+            print(self.board)
+            move = self.players[curr_idx].get_move(self.board, False)
+            self.board = self.board.apply_move(move)
+            
+            winner = self.board.get_winner()
+            if winner is not None:
+                print(self.board)
+                if winner == 0: print("Empate!")
+                else: print(f"Jogador {winner} venceu!")
+                break
+            curr_idx = 1 - curr_idx
 
-
-
-
-	def __init__(self):
-		self.board = Board()
-		self.players = []
-		self.board_history = []
-
-	def setup_game_mode(self):
-		game_mode = input("Human vs Human (1)\nHuman vs Bot (2)\nBot vs Bot (3)\n")
-		if game_mode == "1":
-			self.players = [HumanPlayer(), HumanPlayer()]
-		elif game_mode == "2":
-			self.players = [HumanPlayer(), BotPlayer()]
-		elif game_mode == "3":
-			self.players = [BotPlayer(), BotPlayer()]
-
-	"""
-	Game.run() method on a while loop until someone wins
-	Player.get_move() -> Board.apply_move() -> Board.get_winner()
-	"""
+    def run_silencioso(self):
+        """Versão do loop de jogo sem prints para gerar dados rapidamente."""
+        curr_player_idx = 0
+        while True:
+            curr_player = self.players[curr_player_idx]
+            move = curr_player.get_move(self.board, False)
+            self.board = self.board.apply_move(move)
+            
+            result = self.board.get_winner()
+            if result is not None:
+                break
+            curr_player_idx = 1 - curr_player_idx
+        return result
