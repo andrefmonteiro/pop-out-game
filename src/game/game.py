@@ -8,7 +8,7 @@ class Game:
 
     def setup_game_mode(self):
         print("1. Human vs Human\n2. Human vs Bot\n3. Bot vs Bot")
-        mode = input("Escolha o modo: ")
+        mode = input("Choose mode: ")
         if mode == "1":
             self.players = [HumanPlayer(), HumanPlayer()]
         elif mode == "2":
@@ -19,28 +19,28 @@ class Game:
     def run(self):
         self.setup_game_mode()
         curr_idx = 0
-        
+
         while True:
             print(self.board)
             move = self.players[curr_idx].get_move(self.board, False)
             self.board = self.board.apply_move(move)
-            
+
             winner = self.board.get_winner()
             if winner is not None:
                 print(self.board)
-                if winner == 0: print("Empate!")
-                else: print(f"Jogador {winner} venceu!")
+                if winner == 0: print("Draw!")
+                else: print(f"Player {winner} wins!")
                 break
             curr_idx = 1 - curr_idx
 
-    def run_silencioso(self):
-        """Versão do loop de jogo sem prints para gerar dados rapidamente."""
+    def run_silent(self):
+        """Game loop without prints, for fast dataset generation."""
         curr_player_idx = 0
         while True:
             curr_player = self.players[curr_player_idx]
             move = curr_player.get_move(self.board, False)
             self.board = self.board.apply_move(move)
-            
+
             result = self.board.get_winner()
             if result is not None:
                 break
