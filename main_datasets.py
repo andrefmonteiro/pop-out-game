@@ -2,24 +2,22 @@
 import sys
 import os
 
-# Garante que o Python encontra a pasta 'src'
+# Make sure Python finds the 'src' directory
 sys.path.append(os.path.join(os.path.dirname(__file__), 'src'))
 
 from game.game import Game
 from game.player import BotPlayer
 
-def gerar_dados(n_jogos=50):
-    print(f"🚀 A iniciar a geração de dados ({n_jogos} jogos)...")
-    for i in range(n_jogos):
+def generate_data(n_games=50):
+    print(f"Starting data generation ({n_games} games)...")
+    for i in range(n_games):
         game = Game()
-        # Removidos os argumentos color=1 e color=2
-        game.players = [BotPlayer(), BotPlayer()] 
-        
-        # Este método tem de estar dentro da classe Game no ficheiro game.py
-        game.run_silencioso() 
-        
+        game.players = [BotPlayer(), BotPlayer()]
+
+        game.run_silent()
+
         if (i + 1) % 5 == 0:
-            print(f"✅ {i+1} jogos terminados. O CSV está a crescer!")
+            print(f"{i+1} games finished. CSV is growing.")
 
 if __name__ == "__main__":
-    gerar_dados(50)
+    generate_data(50)

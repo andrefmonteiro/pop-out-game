@@ -12,13 +12,13 @@ class MCTSNode:
         self.children = []
         self.wins = 0
         self.visits = 0
-        # Pega os movimentos legais definidos no teu Board
+        # Legal moves provided by Board
         self.untried_moves = board.get_legal_moves()
 
     def uct_value(self, c=1.414):
         if self.visits == 0:
             return float('inf')
-        # Fórmula UCT: Exploração vs Exploração
+        # UCT: exploitation + exploration
         return (self.wins / self.visits) + c * math.sqrt(math.log(self.parent.visits) / self.visits)
 
 def mcts_search(root_board, iterations=1000):
@@ -26,12 +26,12 @@ def mcts_search(root_board, iterations=1000):
 
     for _ in range(iterations):
         node = root_node
-        
-        # 1. SELEÇÃO
+
+        # 1. SELECTION
         while not node.untried_moves and node.children:
             node = max(node.children, key=lambda n: n.uct_value())
-        
-        # 2. EXPANSÃO
+
+        # 2. EXPANSION
         if node.untried_moves:
             move = node.untried_moves.pop()
             new_state = node.board.apply_move(move)
@@ -39,34 +39,34 @@ def mcts_search(root_board, iterations=1000):
             node.children.append(child_node)
             node = child_node
 
-        # 3. SIMULAÇÃO (Playout)
+        # 3. SIMULATION (playout)
         sim_board = copy.deepcopy(node.board)
         while sim_board.get_winner() is None:
             possible_moves = sim_board.get_legal_moves()
             if not possible_moves: break
             sim_board = sim_board.apply_move(random.choice(possible_moves))
-        
-        # 4. RETROPROPAGAÇÃO[cite: 1]
+
+        # 4. BACKPROPAGATION
         result = sim_board.get_winner()
         while node:
             node.visits += 1
-            # Se o resultado for vitória do jogador que iniciou o MCTS
+            # Win for the player who started the MCTS search
             if result == root_board.current_player:
                 node.wins += 1
-            elif result == 0: # Empate[cite: 1]
+            elif result == 0:  # Draw
                 node.wins += 0.5
             node = node.parent
 
-    # Escolhe a jogada com mais visitas[cite: 1]
+    # Pick the move with the most visits
     best_child = max(root_node.children, key=lambda n: n.visits)
-    
-    # GUARDA DADOS PARA A ÁRVORE DE DECISÃO (ID3)[cite: 1]
+
+    # Save the (state, move) pair for the decision-tree (ID3) dataset
     save_to_dataset(root_board, best_child.move)
-    
+
     return best_child.move
 
 def save_to_dataset(board, move):
-    # Flatten do board (42 posições) + a jogada[cite: 1]
+    # Flatten the board (42 cells) and append the chosen move
     data = board.grid.flatten().tolist()
     move_str = f"{move.move_type.name}_{move.col}"
     with open('popout_dataset.csv', 'a', newline='') as f:
