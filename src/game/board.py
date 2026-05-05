@@ -70,4 +70,6 @@ class Board:
 
     def __str__(self):
         symbols = {0: ".", 1: "X", 2: "0"}
-        return "\n".join(" ".join(symbols[cell] for cell in row) for row in self.grid)
+        header = " ".join(str(c + 1) for c in range(7))
+        rows = "\n".join(" ".join(symbols[cell] for cell in row) for row in self.grid)
+        return f"{header}\n{rows}"

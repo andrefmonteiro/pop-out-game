@@ -21,12 +21,15 @@ class Game:
         curr_idx = 0
 
         while True:
+            print("\n" + "=" * 30)
+            print(f"Player {self.board.current_player}'s turn")
             print(self.board)
             move = self.players[curr_idx].get_move(self.board, False)
             self.board = self.board.apply_move(move)
 
             winner = self.board.get_winner()
             if winner is not None:
+                print("\n" + "=" * 30)
                 print(self.board)
                 if winner == 0: print("Draw!")
                 else: print(f"Player {winner} wins!")
