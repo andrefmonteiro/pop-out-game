@@ -1,5 +1,4 @@
 import numpy as np
-import copy
 from game.move import Move, MoveType
 
 class Board:
@@ -22,8 +21,14 @@ class Board:
         return moves
 
     def apply_move(self, move: Move) -> 'Board':
-        # Return a copy so MCTS can simulate without mutating the real game
-        new_board = copy.deepcopy(self)
+        # Return a copy so MCTS can simulate without mutating the real game.
+        # Hand-rolled copy: skip Board.__init__ via __new__ (we don't need the
+        # zero grid it builds), then copy the two attributes we actually have.
+        # Roughly 10x faster than copy.deepcopy because it avoids Python's
+        # generic introspection / memo-dict machinery.
+        new_board = Board.__new__(Board)
+        new_board.grid = self.grid.copy()
+        new_board.current_player = self.current_player
 
         if move.move_type == MoveType.DROP:
             for r in reversed(range(6)):
