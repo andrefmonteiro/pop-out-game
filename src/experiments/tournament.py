@@ -25,11 +25,29 @@ from game.game import Game
 
 # The four variants we want to compare. To add a new one, just append another
 # MCTSConfig -- the round robin and the CSV will grow automatically.
+#
+# Iterations were reduced from the original spec (500/2000/500/500) because at
+# those values a full 50-game tournament took ~40h on this machine. The 4x
+# ratio between Baseline and DeepThinker is preserved so the comparison still
+# means roughly the same thing; if Board.apply_move is later optimized to
+# avoid copy.deepcopy, we can raise these numbers back up.
 VARIANTS = [
-    MCTSConfig(name="Baseline",     iterations=500,  c=1.414, expansion_count=1),
-    MCTSConfig(name="DeepThinker",  iterations=2000, c=1.414, expansion_count=1),
-    MCTSConfig(name="Explorer",     iterations=500,  c=2.5,   expansion_count=1),
-    MCTSConfig(name="WideExpander", iterations=500,  c=1.414, expansion_count=3),
+    MCTSConfig(name="Baseline",     iterations=50,  c=1.414, expansion_count=1),
+    MCTSConfig(name="DeepThinker",  iterations=200, c=1.414, expansion_count=1),
+    MCTSConfig(name="Explorer",     iterations=50,  c=2.5,   expansion_count=1),
+    MCTSConfig(name="WideExpander", iterations=50,  c=1.414, expansion_count=3),
+]
+
+# Toy versions of VARIANTS used to verify the wiring in seconds rather than
+# hours. Keep the iteration counts very small -- the goal here is "do all the
+# pieces (tournament loop, progress prints, CSV writing) work?", not "is one
+# variant stronger than another?". Use SMOKE_VARIANTS with a small
+# games_per_matchup before committing to the real VARIANTS run.
+SMOKE_VARIANTS = [
+    MCTSConfig(name="Baseline",     iterations=10, c=1.414, expansion_count=1),
+    MCTSConfig(name="DeepThinker",  iterations=20, c=1.414, expansion_count=1),
+    MCTSConfig(name="Explorer",     iterations=10, c=2.5,   expansion_count=1),
+    MCTSConfig(name="WideExpander", iterations=10, c=1.414, expansion_count=3),
 ]
 
 # Written at the repo root next to popout_dataset.csv.
@@ -73,4 +91,6 @@ def run_tournament(variants, games_per_matchup=50):
 
 
 if __name__ == "__main__":
-    run_tournament(VARIANTS)
+    # 15 games/matchup is a compromise between signal and runtime (~1.5-2h
+    # with the shrunk VARIANTS). Bump up if the variants tie too often.
+    run_tournament(VARIANTS, games_per_matchup=15)
