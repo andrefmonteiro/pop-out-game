@@ -1,4 +1,4 @@
-from mcts.mcts import mcts_search
+from mcts.mcts import mcts_search, MCTSConfig
 from game.move import Move, MoveType
 
 class Player:
@@ -6,9 +6,13 @@ class Player:
         pass
 
 class BotPlayer(Player):
+    def __init__(self, config: MCTSConfig | None = None):
+        # Default config keeps existing call sites (BotPlayer()) working;
+        # the tournament passes a specific MCTSConfig per variant.
+        self.config = config if config is not None else MCTSConfig()
+
     def get_move(self, board, is_game_drawable) -> Move:
-        # Increase iterations (e.g. 2000) to make the bot stronger
-        return mcts_search(board, iterations=1000)
+        return mcts_search(board, self.config)
 
 class HumanPlayer(Player):
     def get_move(self, board, is_game_drawable) -> Move:
