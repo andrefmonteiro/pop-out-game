@@ -13,6 +13,7 @@ Run:
 import sys
 import os
 import csv
+import time
 
 # Make the repo's src/ importable when this file is run directly,
 # the same trick main_datasets.py uses.
@@ -31,6 +32,7 @@ from game.game import Game
 # ratio between Baseline and DeepThinker is preserved so the comparison still
 # means roughly the same thing; if Board.apply_move is later optimized to
 # avoid copy.deepcopy, we can raise these numbers back up.
+# Pilot (2026-05-07): avg 6.7s/game → 100 games/matchup ≈ 2h 14min total.
 VARIANTS = [
     MCTSConfig(name="Baseline",     iterations=50,  c=1.414, expansion_count=1),
     MCTSConfig(name="DeepThinker",  iterations=200, c=1.414, expansion_count=1),
@@ -50,11 +52,26 @@ SMOKE_VARIANTS = [
     MCTSConfig(name="WideExpander", iterations=10, c=1.414, expansion_count=3),
 ]
 
+# 1-game-per-matchup timing pilot. Same configs as VARIANTS but used with
+# games_per_matchup=1 so the run finishes in a few minutes and we can read
+# the projected cost for 100 games before committing to the full tournament.
+TIMING_VARIANTS = [
+    MCTSConfig(name="Baseline",     iterations=50,  c=1.414, expansion_count=1),
+    MCTSConfig(name="DeepThinker",  iterations=200, c=1.414, expansion_count=1),
+    MCTSConfig(name="Explorer",     iterations=50,  c=2.5,   expansion_count=1),
+    MCTSConfig(name="WideExpander", iterations=50,  c=1.414, expansion_count=3),
+]
+
 # Written at the repo root next to popout_dataset.csv.
 RESULTS_PATH = os.path.join(os.path.dirname(__file__), '..', '..', 'experiments_results.csv')
 
 
 def run_tournament(variants, games_per_matchup=50):
+    n_matchups = len(variants) * (len(variants) - 1)
+    total_games_all = n_matchups * games_per_matchup
+    games_done = 0
+    tournament_start = time.perf_counter()
+
     # Open in 'w' mode so each tournament run starts from a clean file.
     with open(RESULTS_PATH, 'w', newline='') as f:
         writer = csv.writer(f)
@@ -73,7 +90,11 @@ def run_tournament(variants, games_per_matchup=50):
                     # state between matches.
                     game = Game()
                     game.players = [BotPlayer(bot1), BotPlayer(bot2)]
+
+                    t0 = time.perf_counter()
                     result = game.run_silent(game_num=i + 1, total_games=games_per_matchup)
+                    t_game = time.perf_counter() - t0
+
                     # run_silent returns Board.get_winner(): 1 / 2 / 0
                     if result == 1:
                         wins += 1
@@ -82,16 +103,29 @@ def run_tournament(variants, games_per_matchup=50):
                     else:
                         draws += 1
 
-                writer.writerow([bot1.name, bot2.name, wins, losses, draws, games_per_matchup])
+                    games_done += 1
+                    t_total = time.perf_counter() - tournament_start
+                    avg = t_total / games_done
+                    eta = avg * (total_games_all - games_done)
+                    print(f"  → done in {t_game:.1f}s | avg {avg:.1f}s/game | "
+                          f"{games_done}/{total_games_all} games | ETA: ~{eta:.0f}s")
+                    writer.writerow([bot1.name, bot2.name, wins, losses, draws, games_per_matchup])
+                    print("#" * 20)
                 # Flush so partial results are visible if the run is interrupted.
                 f.flush()
                 print(f"{bot1.name} vs {bot2.name} -> W:{wins} L:{losses} D:{draws}")
 
-    print("Tournament complete. Results saved to experiments_results.csv")
+    t_total = time.perf_counter() - tournament_start
+    avg = t_total / total_games_all
+    projection = avg * 1200  # cost for 100 games/matchup across 12 matchups
+    proj_h = int(projection // 3600)
+    proj_m = int((projection % 3600) // 60)
+    print(f"\nTournament complete. Results saved to experiments_results.csv")
+    print(f"Total time: {t_total:.0f}s | Average per game: {avg:.1f}s")
+    print(f"→ For 100 games/matchup (1200 total): estimate {projection:.0f}s (~{proj_h}h {proj_m}m)")
 
 
 if __name__ == "__main__":
-    # SMOKE_VARIANTS with 1 game/matchup finishes in ~2 minutes and is enough
-    # to test the full pipeline (CSV, progress prints, visualize.py).
-    # Switch to VARIANTS with more games once you're ready for real results.
-    run_tournament(SMOKE_VARIANTS, games_per_matchup=1)
+    # Real tournament: 100 games/matchup, ~2h 14min expected.
+    # Pilot confirmed avg 6.7s/game with these variants on 2026-05-07.
+    run_tournament(VARIANTS, games_per_matchup=100)
