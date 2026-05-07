@@ -56,58 +56,71 @@ SMOKE_VARIANTS = [
 RESULTS_PATH = os.path.join(os.path.dirname(__file__), '..', '..', 'experiments_results.csv')
 
 
-def run_tournament(variants, games_per_matchup=50):
-    n_matchups = len(variants) * (len(variants) - 1)
-    total_games_all = n_matchups * games_per_matchup
-    games_done = 0
-    tournament_start = time.perf_counter()
-
-    # Open in 'w' mode so each tournament run starts from a clean file.
+def _save_csv(tally, games_played_per_matchup):
+    # Overwrite the file with current standings -- always exactly one row per
+    # matchup. Called after every round so a crash loses at most one round.
     with open(RESULTS_PATH, 'w', newline='') as f:
         writer = csv.writer(f)
         writer.writerow(['bot1_name', 'bot2_name', 'bot1_wins', 'bot2_wins', 'draws', 'total_games'])
+        for (n1, n2), (w, l, d) in tally.items():
+            writer.writerow([n1, n2, w, l, d, games_played_per_matchup])
 
-        # Ordered round-robin: skip A vs A, but A vs B and B vs A are both run
-        # because Pop Out isn't symmetric (player 1 moves first).
-        for bot1 in variants:
-            for bot2 in variants:
-                if bot1 is bot2:
-                    continue
 
-                wins, losses, draws = 0, 0, 0
-                for i in range(games_per_matchup):
-                    # Fresh game + fresh players per game so there's no leaked
-                    # state between matches.
-                    game = Game()
-                    game.players = [BotPlayer(bot1), BotPlayer(bot2)]
+def run_tournament(variants, games_per_matchup=50):
+    # Build the ordered matchup list once.
+    # A vs B and B vs A are separate because Pop Out isn't symmetric.
+    matchups = [
+        (bot1, bot2)
+        for bot1 in variants
+        for bot2 in variants
+        if bot1 is not bot2
+    ]
+    total_games_all = len(matchups) * games_per_matchup
+    games_done = 0
+    tournament_start = time.perf_counter()
 
-                    t0 = time.perf_counter()
-                    result = game.run_silent(game_num=i + 1, total_games=games_per_matchup)
-                    t_game = time.perf_counter() - t0
+    # Running tally per matchup: [wins, losses, draws].
+    tally = {(b1.name, b2.name): [0, 0, 0] for b1, b2 in matchups}
 
-                    # run_silent returns Board.get_winner(): 1 / 2 / 0
-                    if result == 1:
-                        wins += 1
-                    elif result == 2:
-                        losses += 1
-                    else:
-                        draws += 1
+    # Interleaved loop: play one game of every matchup (a "round"), then
+    # repeat. After each round the CSV is overwritten with current standings.
+    # If the run crashes, every matchup has the same number of games --
+    # the snapshot is always representative.
+    for round_i in range(games_per_matchup):
+        for bot1, bot2 in matchups:
+            game = Game()
+            game.players = [BotPlayer(bot1), BotPlayer(bot2)]
 
-                    games_done += 1
-                    t_total = time.perf_counter() - tournament_start
-                    avg = t_total / games_done
-                    eta = avg * (total_games_all - games_done)
-                    print(f"  → done in {t_game:.1f}s | avg {avg:.1f}s/game | "
-                          f"{games_done}/{total_games_all} games | ETA: ~{eta:.0f}s")
-                    writer.writerow([bot1.name, bot2.name, wins, losses, draws, games_per_matchup])
-                    print("#" * 20)
-                # Flush so partial results are visible if the run is interrupted.
-                f.flush()
-                print(f"{bot1.name} vs {bot2.name} -> W:{wins} L:{losses} D:{draws}")
+            t0 = time.perf_counter()
+            result = game.run_silent(game_num=round_i + 1, total_games=games_per_matchup)
+            t_game = time.perf_counter() - t0
+
+            key = (bot1.name, bot2.name)
+            if result == 1:
+                tally[key][0] += 1
+            elif result == 2:
+                tally[key][1] += 1
+            else:
+                tally[key][2] += 1
+
+            games_done += 1
+            t_total = time.perf_counter() - tournament_start
+            avg = t_total / games_done
+            eta = avg * (total_games_all - games_done)
+            print(f"  → done in {t_game:.1f}s | avg {avg:.1f}s/game | "
+                  f"{games_done}/{total_games_all} games | ETA: ~{eta:.0f}s")
+
+        # Persist after every round and print a summary block.
+        _save_csv(tally, round_i + 1)
+        print("#" * 20)
+        print(f"Round {round_i + 1}/{games_per_matchup} complete — current standings:")
+        for (n1, n2), (w, l, d) in tally.items():
+            print(f"  {n1} vs {n2}  W:{w} L:{l} D:{d}")
+        print("#" * 20)
 
     t_total = time.perf_counter() - tournament_start
     avg = t_total / total_games_all
-    projection = avg * 1200  # cost for 100 games/matchup across 12 matchups
+    projection = avg * 1200  # projection for 100 games/matchup (useful during pilots)
     proj_h = int(projection // 3600)
     proj_m = int((projection % 3600) // 60)
     print(f"\nTournament complete. Results saved to experiments_results.csv")
