@@ -1,0 +1,13 @@
+bot1_name,bot2_name,bot1_wins,bot2_wins,draws,total_games
+Baseline,DeepThinker,0,1,0,1
+Baseline,Explorer,0,1,0,1
+Baseline,WideExpander,1,0,0,1
+DeepThinker,Baseline,0,1,0,1
+DeepThinker,Explorer,1,0,0,1
+DeepThinker,WideExpander,1,0,0,1
+Explorer,Baseline,0,1,0,1
+Explorer,DeepThinker,0,1,0,1
+Explorer,WideExpander,0,1,0,1
+WideExpander,Baseline,1,0,0,1
+WideExpander,DeepThinker,0,1,0,1
+WideExpander,Explorer,1,0,0,1

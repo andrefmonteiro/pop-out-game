@@ -91,6 +91,7 @@ def run_tournament(variants, games_per_matchup=50):
 
 
 if __name__ == "__main__":
-    # 15 games/matchup is a compromise between signal and runtime (~1.5-2h
-    # with the shrunk VARIANTS). Bump up if the variants tie too often.
-    run_tournament(VARIANTS, games_per_matchup=15)
+    # SMOKE_VARIANTS with 1 game/matchup finishes in ~2 minutes and is enough
+    # to test the full pipeline (CSV, progress prints, visualize.py).
+    # Switch to VARIANTS with more games once you're ready for real results.
+    run_tournament(SMOKE_VARIANTS, games_per_matchup=1)
