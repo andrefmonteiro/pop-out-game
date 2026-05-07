@@ -95,8 +95,13 @@ def mcts_search(root_board, config: MCTSConfig):
     return best_child.move
 
 
-_POPOUT_HEADER = [f'r{r}c{c}' for r in range(6) for c in range(7)] + ['move']
+_POPOUT_HEADER = ['game_id'] + [f'r{r}c{c}' for r in range(6) for c in range(7)] + ['move']
 _POPOUT_PATH = 'popout_dataset.csv'
+_current_game_id = 0
+
+def set_game_id(gid: int):
+    global _current_game_id
+    _current_game_id = gid
 
 def save_to_dataset(board, move):
     # Flatten the board (42 cells) and append the chosen move.
@@ -108,4 +113,4 @@ def save_to_dataset(board, move):
         writer = csv.writer(f)
         if write_header:
             writer.writerow(_POPOUT_HEADER)
-        writer.writerow(data + [move_str])
+        writer.writerow([_current_game_id] + data + [move_str])
