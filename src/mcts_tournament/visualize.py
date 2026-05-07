@@ -101,7 +101,7 @@ def plot_win_rate_barchart(df: pd.DataFrame, output_path: str = None) -> None:
     print(f'Bar chart saved to {output_path}')
 
 
-def generate_all(results_path: str = "experiments_results.csv") -> None:
+def generate_all(results_path: str = "first_tournament_results.csv") -> None:
     """Load results and generate all plots."""
     df = load_results(results_path)
     plot_win_rate_heatmap(df)

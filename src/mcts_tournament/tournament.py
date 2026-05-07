@@ -53,7 +53,7 @@ SMOKE_VARIANTS = [
 ]
 
 # Written at the repo root next to popout_dataset.csv.
-RESULTS_PATH = os.path.join(os.path.dirname(__file__), '..', '..', 'experiments_results.csv')
+RESULTS_PATH = os.path.join(os.path.dirname(__file__), '..', '..', 'first_tournament_results.csv')
 
 
 def _save_csv(tally, games_played_per_matchup):
