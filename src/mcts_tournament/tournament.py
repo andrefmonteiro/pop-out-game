@@ -67,6 +67,26 @@ RESULTS_PATH    = os.path.join(_ROOT, 'first_tournament_results.csv')
 RESULTS_PATH_T2 = os.path.join(_ROOT, 'second_tournament_results.csv')
 
 
+def _load_existing(results_path, matchups):
+    """Read existing CSV tallies so this run appends rather than restarts.
+
+    Returns (tally, games_so_far) where games_so_far is the number of games
+    already played per matchup. If the file doesn't exist, or a matchup pair
+    is missing from it, that pair starts at zero.
+    """
+    tally = {(b1.name, b2.name): [0, 0, 0] for b1, b2 in matchups}
+    games_so_far = 0
+    if not os.path.exists(results_path):
+        return tally, 0
+    with open(results_path, newline='') as f:
+        for row in csv.DictReader(f):
+            key = (row['bot1_name'], row['bot2_name'])
+            if key in tally:
+                tally[key] = [int(row['bot1_wins']), int(row['bot2_wins']), int(row['draws'])]
+                games_so_far = int(row['total_games'])
+    return tally, games_so_far
+
+
 def _save_csv(tally, games_played_per_matchup, results_path):
     # Overwrite the file with current standings -- always exactly one row per
     # matchup. Called after every round so a crash loses at most one round.
@@ -90,11 +110,13 @@ def run_tournament(variants, games_per_matchup=50, results_path=RESULTS_PATH):
     games_done = 0
     tournament_start = time.perf_counter()
 
-    # Running tally per matchup: [wins, losses, draws].
-    tally = {(b1.name, b2.name): [0, 0, 0] for b1, b2 in matchups}
+    # Load any existing results so this run accumulates on top of prior runs.
+    tally, games_so_far = _load_existing(results_path, matchups)
+    if games_so_far:
+        print(f"Resuming from existing results ({games_so_far} games/matchup already played).")
 
     # Interleaved loop: play one game of every matchup (a "round"), then
-    # repeat. After each round the CSV is overwritten with current standings.
+    # repeat. After each round the CSV is overwritten with cumulative standings.
     # If the run crashes, every matchup has the same number of games --
     # the snapshot is always representative.
     for round_i in range(games_per_matchup):
@@ -122,7 +144,8 @@ def run_tournament(variants, games_per_matchup=50, results_path=RESULTS_PATH):
                   f"{games_done}/{total_games_all} games | ETA: ~{eta:.0f}s")
 
         # Persist after every round and print a summary block.
-        _save_csv(tally, round_i + 1, results_path)
+        # total_games = prior runs + rounds completed this run.
+        _save_csv(tally, games_so_far + round_i + 1, results_path)
         print("#" * 20)
         print(f"Round {round_i + 1}/{games_per_matchup} complete — current standings:")
         for (n1, n2), (w, l, d) in tally.items():
