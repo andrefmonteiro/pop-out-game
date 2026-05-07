@@ -52,16 +52,6 @@ SMOKE_VARIANTS = [
     MCTSConfig(name="WideExpander", iterations=10, c=1.414, expansion_count=3),
 ]
 
-# 1-game-per-matchup timing pilot. Same configs as VARIANTS but used with
-# games_per_matchup=1 so the run finishes in a few minutes and we can read
-# the projected cost for 100 games before committing to the full tournament.
-TIMING_VARIANTS = [
-    MCTSConfig(name="Baseline",     iterations=50,  c=1.414, expansion_count=1),
-    MCTSConfig(name="DeepThinker",  iterations=200, c=1.414, expansion_count=1),
-    MCTSConfig(name="Explorer",     iterations=50,  c=2.5,   expansion_count=1),
-    MCTSConfig(name="WideExpander", iterations=50,  c=1.414, expansion_count=3),
-]
-
 # Written at the repo root next to popout_dataset.csv.
 RESULTS_PATH = os.path.join(os.path.dirname(__file__), '..', '..', 'experiments_results.csv')
 
