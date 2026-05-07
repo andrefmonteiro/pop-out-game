@@ -36,8 +36,20 @@ class Game:
                 break
             curr_idx = 1 - curr_idx
 
-    def run_silent(self):
-        """Game loop without prints, for fast dataset generation."""
+    def run_silent(self, game_num: int = None, total_games: int = None):
+        """Game loop without prints, for fast dataset generation / tournaments.
+
+        When called with both game_num and total_games, prints a single
+        progress line at the start so a long-running tournament shows life.
+        Bot names come from each BotPlayer's MCTSConfig; humans show as 'Human'.
+        """
+        if game_num is not None and total_games is not None:
+            def _name(p):
+                # BotPlayer carries a config with a .name; HumanPlayer doesn't.
+                return p.config.name if isinstance(p, BotPlayer) else "Human"
+            p1, p2 = self.players[0], self.players[1]
+            print(f"[{_name(p1)} vs {_name(p2)}] Game {game_num}/{total_games}")
+
         curr_player_idx = 0
         while True:
             curr_player = self.players[curr_player_idx]
