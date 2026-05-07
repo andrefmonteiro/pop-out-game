@@ -4,4 +4,4 @@
 [x] Test game PvB
 [x] Choose python library to make tables and graphs of the battle of the mcts versions
 [x] Run 1st tournament with 4 MCTS versions
-[ ] Run 2nd tournament with 4 subversions of DeepThinker model
+[X] Run 2nd tournament with 4 subversions of DeepThinker model
