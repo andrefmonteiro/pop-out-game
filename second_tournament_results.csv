@@ -1,0 +1,13 @@
+bot1_name,bot2_name,bot1_wins,bot2_wins,draws,total_games
+DT-Frugal,DT-Exploit,1,0,0,1
+DT-Frugal,DT-Explore,1,0,0,1
+DT-Frugal,DT-Wide,1,0,0,1
+DT-Exploit,DT-Frugal,1,0,0,1
+DT-Exploit,DT-Explore,0,1,0,1
+DT-Exploit,DT-Wide,0,1,0,1
+DT-Explore,DT-Frugal,1,0,0,1
+DT-Explore,DT-Exploit,0,1,0,1
+DT-Explore,DT-Wide,1,0,0,1
+DT-Wide,DT-Frugal,0,1,0,1
+DT-Wide,DT-Exploit,0,1,0,1
+DT-Wide,DT-Explore,0,1,0,1
