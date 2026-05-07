@@ -2,6 +2,7 @@ import math
 import random
 import csv
 import copy
+import os
 from dataclasses import dataclass
 from game.board import Board
 
@@ -89,18 +90,22 @@ def mcts_search(root_board, config: MCTSConfig):
     # Pick the move with the most visits
     best_child = max(root_node.children, key=lambda n: n.visits)
 
-    # Disabled while running tournaments so we don't bloat popout_dataset.csv
-    # with thousands of bot-vs-bot decisions. Re-enable when generating
-    # training data for the ID3 decision tree.
-    # save_to_dataset(root_board, best_child.move)
+    save_to_dataset(root_board, best_child.move)
 
     return best_child.move
 
 
+_POPOUT_HEADER = [f'r{r}c{c}' for r in range(6) for c in range(7)] + ['move']
+_POPOUT_PATH = 'popout_dataset.csv'
+
 def save_to_dataset(board, move):
-    # Flatten the board (42 cells) and append the chosen move
+    # Flatten the board (42 cells) and append the chosen move.
+    # Writes the header row automatically if the file doesn't exist yet.
     data = board.grid.flatten().tolist()
     move_str = f"{move.move_type.name}_{move.col}"
-    with open('popout_dataset.csv', 'a', newline='') as f:
+    write_header = not os.path.exists(_POPOUT_PATH)
+    with open(_POPOUT_PATH, 'a', newline='') as f:
         writer = csv.writer(f)
+        if write_header:
+            writer.writerow(_POPOUT_HEADER)
         writer.writerow(data + [move_str])
