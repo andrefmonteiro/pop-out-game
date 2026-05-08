@@ -44,4 +44,4 @@ def generate_data(n_games=50):
         print(f"  Game {start_id + i}/{end_id} done in {t_game:.1f}s | avg {avg:.1f}s/game | ETA: ~{eta_str}")
 
 if __name__ == "__main__":
-    generate_data(300)
+    generate_data(500)
