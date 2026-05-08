@@ -9,7 +9,21 @@
 [x] Implement ID3 decision tree from scratch (decision_tree_id3.py)
 [x] Verify ID3 on iris dataset (90% test accuracy, tree depth 4, 11 nodes)
 
-[ ] Run ID3 depth sweep on PopOut: depths [1,3,5,7,10,15,20,30,None], save id3_popout_results.csv
-[ ] Generate accuracy-vs-depth bar chart (venv/bin/python src/decision_tree/visualize_id3.py)
-[ ] Build Jupyter notebook (3 sections: MCTS results, Iris ID3, PopOut ID3)
-[ ] Create presentation slides (PDF)
+[ ] Run ID3 depth sweep on PopOut (run ONCE, results are persisted to CSV)
+      → copy the POPOUT block from the bottom of src/decision_tree/decision_tree_id3.py into a notebook cell
+      → run from repo root; takes a few minutes (9 trees × 15k rows each)
+      → saves id3_popout_results.csv at the repo root — this is the source of truth for all charts
+      → fill in the results table in notebook_notes.md once done
+
+[ ] Generate accuracy-vs-depth bar chart (can be re-run any time from saved CSV)
+      → venv/bin/python src/decision_tree/visualize_id3.py
+      → reads id3_popout_results.csv → saves src/decision_tree/graphs/popout_accuracy_vs_depth.png
+      → safe to re-run with different colors/style without re-running the model
+
+[ ] Build Jupyter notebook (see notebook_notes.md for full outline and talking points)
+      → Section 1: MCTS — algorithm explanation, tournament results (PNGs in src/mcts_tournament/graphs/), winner
+      → Section 2: Iris ID3 — run decision_tree_id3.py __main__ inline, show tree + accuracy
+      → Section 3: PopOut ID3 — depth sweep table + bar chart, discuss tradeoffs vs MCTS
+
+[ ] Create presentation slides (PDF, max 10 min)
+      → talking points already in notebook_notes.md
