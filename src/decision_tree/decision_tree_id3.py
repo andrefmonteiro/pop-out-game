@@ -203,6 +203,21 @@ def evaluate(node: Node, test_data: list[dict], label_col: str) -> float:
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
+def tree_stats(node: Node) -> dict:
+    """Return depth, total nodes, internal nodes, and leaf count for the tree."""
+    if node is None:
+        return {'depth': 0, 'nodes': 0, 'leaves': 0, 'internal': 0}
+    if node.label is not None:
+        return {'depth': 0, 'nodes': 1, 'leaves': 1, 'internal': 0}
+    child_stats = [tree_stats(child) for child in node.children.values()]
+    return {
+        'depth':    1 + max(s['depth']    for s in child_stats),
+        'nodes':    1 + sum(s['nodes']    for s in child_stats),
+        'leaves':       sum(s['leaves']   for s in child_stats),
+        'internal': 1 + sum(s['internal'] for s in child_stats),
+    }
+
+
 def train_test_split(data: list[dict], test_ratio: float = 0.2,
                      seed: int = 42) -> tuple[list[dict], list[dict]]:
     """Shuffle data and split into (train, test) sets."""
@@ -246,8 +261,9 @@ def save_results(results: list[dict], filepath: str) -> None:
 #   print_tree(tree)
 #   print(f"Iris test accuracy: {evaluate(tree, test, 'class'):.2%}")
 #
-# POPOUT (test several max_depth values, compare accuracy):
+# POPOUT (sweep max_depth to find the best generalisation point):
 #
+#   import time  # needed for timing each build
 #   data     = load_csv('popout_dataset.csv')
 #   features = [f for f in data[0] if f not in ('game_id', 'move')]
 #   # cast board cells to int (CSV loads everything as strings)
@@ -255,16 +271,35 @@ def save_results(results: list[dict], filepath: str) -> None:
 #       for f in features: row[f] = int(row[f])
 #   train, test = train_test_split(data, test_ratio=0.2)
 #
+#   # Sweep from very shallow to unlimited — theoretical max depth = 42 (one per feature).
+#   # In practice the tree stops earlier when leaves become pure.
+#   DEPTHS = [1, 3, 5, 7, 10, 15, 20, 30, None]
+#
 #   results = []
-#   for depth in [5, 10, 20, None]:
+#   for depth in DEPTHS:
+#       t0   = time.perf_counter()
 #       tree = build_tree(train, features, 'move', max_depth=depth)
-#       acc  = evaluate(tree, test, 'move')
-#       results.append({'max_depth': depth, 'test_accuracy': acc})
-#       print(f"max_depth={depth}: {acc:.2%}")
-#       print_tree(tree, max_print_depth=3)   # print first 3 levels only
+#       elapsed = time.perf_counter() - t0
+#       stats = tree_stats(tree)
+#       train_acc = evaluate(tree, train, 'move')
+#       test_acc  = evaluate(tree, test,  'move')
+#       results.append({
+#           'max_depth':    depth,
+#           'actual_depth': stats['depth'],
+#           'nodes':        stats['nodes'],
+#           'leaves':       stats['leaves'],
+#           'train_acc':    round(train_acc, 4),
+#           'test_acc':     round(test_acc,  4),
+#           'build_time_s': round(elapsed,   2),
+#       })
+#       label = str(depth) if depth is not None else 'unlimited'
+#       print(f"  max_depth={label:>9} | depth={stats['depth']:>3} nodes={stats['nodes']:>5} "
+#             f"| train={train_acc:.2%} test={test_acc:.2%} | {elapsed:.1f}s")
+#       print_tree(tree, max_print_depth=3)   # show first 3 levels only
 #
 #   save_results(results, 'id3_popout_results.csv')
-#   # Then generate a plot with visualize_id3.py (see that file)
+#   # Then generate the accuracy-vs-depth bar chart:
+#   #   python src/decision_tree/visualize_id3.py
 #
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -301,6 +336,10 @@ if __name__ == "__main__":
     t0 = time.perf_counter()
     tree = build_tree(train, features, 'class', numerical_features=numerical)
     print(f"done in {time.perf_counter() - t0:.3f}s")
+
+    stats = tree_stats(tree)
+    print(f"\nTree stats: depth={stats['depth']} | "
+          f"nodes={stats['nodes']} (internal={stats['internal']}, leaves={stats['leaves']})")
 
     print("\nDecision tree:")
     print_tree(tree)
