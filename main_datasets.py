@@ -38,7 +38,10 @@ def generate_data(n_games=50):
         t_total = time.perf_counter() - start
         avg = t_total / (i + 1)
         eta = avg * (n_games - i - 1)
-        print(f"  Game {start_id + i}/{end_id} done in {t_game:.1f}s | avg {avg:.1f}s/game | ETA: ~{eta:.0f}s")
+        eta_h, eta_rem = divmod(int(eta), 3600)
+        eta_m, eta_s = divmod(eta_rem, 60)
+        eta_str = f"{eta_h}h {eta_m}m {eta_s}s" if eta_h else f"{eta_m}m {eta_s}s" if eta_m else f"{eta_s}s"
+        print(f"  Game {start_id + i}/{end_id} done in {t_game:.1f}s | avg {avg:.1f}s/game | ETA: ~{eta_str}")
 
 if __name__ == "__main__":
-    generate_data(100)
+    generate_data(500)
