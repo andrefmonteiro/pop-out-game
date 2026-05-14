@@ -6,6 +6,10 @@ class Board:
         # 6x7 board backed by NumPy
         self.current_player = 1
         self.grid = np.zeros((6, 7), dtype=np.uint8)
+        
+        # NOVO: Caderno de notas para a regra das 3 repetições (Empate).
+        estado_inicial = (self.grid.tobytes(), self.current_player)
+        self.state_history = {estado_inicial: 1}
 
     def get_legal_moves(self) -> list[Move]:
         moves = []
@@ -21,14 +25,12 @@ class Board:
         return moves
 
     def apply_move(self, move: Move) -> 'Board':
-        # Return a copy so MCTS can simulate without mutating the real game.
-        # Hand-rolled copy: skip Board.__init__ via __new__ (we don't need the
-        # zero grid it builds), then copy the two attributes we actually have.
-        # Roughly 10x faster than copy.deepcopy because it avoids Python's
-        # generic introspection / memo-dict machinery.
         new_board = Board.__new__(Board)
         new_board.grid = self.grid.copy()
         new_board.current_player = self.current_player
+        
+        # NOVO: Passar o histórico para as cópias do MCTS não perderem a memória
+        new_board.state_history = self.state_history.copy()
 
         if move.move_type == MoveType.DROP:
             for r in reversed(range(6)):
@@ -42,6 +44,11 @@ class Board:
             new_board.grid[0, move.col] = 0
 
         new_board.current_player = 3 - self.current_player
+        
+        # NOVO: Registar a nova fotografia no caderno de notas
+        state_key = (new_board.grid.tobytes(), new_board.current_player)
+        new_board.state_history[state_key] = new_board.state_history.get(state_key, 0) + 1
+        
         return new_board
 
     def get_winner(self) -> int | None:
@@ -70,6 +77,11 @@ class Board:
 
         # Rule 2: draw if the board has no legal moves left
         if not self.get_legal_moves(): return 0
+        
+        # NOVO - Regra 3: Empate por tripla repetição (loops infinitos)
+        estado_atual = (self.grid.tobytes(), self.current_player)
+        if self.state_history.get(estado_atual, 0) >= 3:
+            return 0  # 0 declara empate perante o vosso código do jogo
 
         return None
 
