@@ -8,6 +8,7 @@ chosen by maximising information gain over all candidate midpoints.
 import math
 import csv
 import random
+from graphviz import Digraph
 from collections import Counter
 
 
@@ -302,49 +303,109 @@ def save_results(results: list[dict], filepath: str) -> None:
 #   #   python src/decision_tree/visualize_id3.py
 #
 # ─────────────────────────────────────────────────────────────────────────────
+def export_to_vscode(node, filename="arvore_iris", max_depth=None):
+    """Gera um ficheiro Markdown (.md) que o VS Code desenha automaticamente."""
+    lines = ["# Visualização da Árvore de Decisão", "", "```mermaid", "graph TD"]
 
+    def build_mermaid(node, node_id="Node0", depth=0):
+        if node is None or (max_depth is not None and depth > max_depth):
+            return
+        
+        # Se for folha (Resultado final) - Fica Verde
+        if node.label is not None:
+            label = str(node.label).replace("->", "").strip()
+            # (["texto"]) faz uma caixa com cantos arredondados
+            lines.append(f'    {node_id}(["{label}"])')
+            lines.append(f'    style {node_id} fill:#a7f0a7,stroke:#333,stroke-width:2px')
+            return
+
+        # Nó de decisão (Pergunta) - Fica Azul
+        condicao = "<=" if node.threshold else ""
+        label_principal = f"{node.feature} {condicao} {node.threshold:.2f}" if node.threshold else node.feature
+        
+        # ["texto"] faz uma caixa quadrada
+        lines.append(f'    {node_id}["{label_principal}"]')
+        lines.append(f'    style {node_id} fill:#a7d8f0,stroke:#333,stroke-width:2px')
+        
+        # Desenhar as setas
+        for i, (branch, child) in enumerate(node.children.items()):
+            child_id = f"{node_id}_{i}"
+            txt_ramo = "Sim" if str(branch) == "<=" else "Não" if str(branch) == ">" else str(branch)
+            lines.append(f'    {node_id} -- "{txt_ramo}" --> {child_id}')
+            build_mermaid(child, child_id, depth + 1)
+
+    build_mermaid(node)
+    lines.append("```")
+    
+    with open(f"{filename}.md", "w", encoding="utf-8") as f:
+        f.write("\n".join(lines))
+    print(f"[INFO] Abre o ficheiro '{filename}.md' no VS Code para veres a árvore!")
 
 if __name__ == "__main__":
     import os, sys, time
-    sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
+    
+    # Garante que o Python encontra os ficheiros
+    base_path = os.path.dirname(__file__)
+    sys.path.append(os.path.join(base_path, '..', '..'))
 
     print("=" * 40)
-    print("ID3 demo — Iris dataset")
+    print("FASE 1: Demonstração ID3 — Iris Dataset")
     print("=" * 40)
 
-    data = load_csv(os.path.join(os.path.dirname(__file__), '..', '..', 'datasets', 'iris-dataset.csv'))
-    for row in data:
-        del row['ID']
+    iris_path = os.path.join(base_path, '..', '..', 'datasets', 'iris-dataset.csv')
+    if os.path.exists(iris_path):
+        data = load_csv(iris_path)
+        for row in data:
+            if 'ID' in row: del row['ID']
+        
+        numerical = {'sepallength', 'sepalwidth', 'petallength', 'petalwidth'}
+        features = [f for f in data[0] if f != 'class']
+        for row in data:
+            for f in numerical: row[f] = float(row[f])
 
-    numerical = {'sepallength', 'sepalwidth', 'petallength', 'petalwidth'}
-    features  = [f for f in data[0] if f != 'class']
+        train, test = train_test_split(data, test_ratio=0.2)
+        tree = build_tree(train, features, 'class', numerical_features=numerical)
+        
+        # GERAR ÁRVORE PARA VER NO VS CODE
+        export_to_vscode(tree, filename="arvore_iris_grafica")
 
-    # CSV loads everything as strings — cast numerical columns to float
-    for row in data:
-        for f in numerical:
-            row[f] = float(row[f])
+        print("\nÁrvore Iris (Texto):")
+        print_tree(tree)
+        print(f"\nIris Accuracy: {evaluate(tree, test, 'class'):.2%}")
 
-    classes = Counter(row['class'] for row in data)
-    print(f"\nDataset: {len(data)} examples | {len(features)} features | {len(classes)} classes")
-    for cls, count in sorted(classes.items()):
-        print(f"  {cls}: {count} examples")
+    print("\n" + "=" * 40)
+    print("FASE 2: Processamento PopOut")
+    print("=" * 40)
 
-    train, test = train_test_split(data, test_ratio=0.2)
-    print(f"\nSplit: {len(train)} train / {len(test)} test (80/20)")
+    popout_path = 'popout_dataset.csv'
+    if not os.path.exists(popout_path):
+        popout_path = os.path.join(base_path, '..', '..', 'popout_dataset.csv')
 
-    print("\nBuilding tree...", end=" ", flush=True)
-    t0 = time.perf_counter()
-    tree = build_tree(train, features, 'class', numerical_features=numerical)
-    print(f"done in {time.perf_counter() - t0:.3f}s")
+    if os.path.exists(popout_path):
+        p_data = load_csv(popout_path)
+        p_features = [f for f in p_data[0] if f not in ('game_id', 'move')]
+        for row in p_data:
+            for f in p_features: row[f] = int(row[f])
 
-    stats = tree_stats(tree)
-    print(f"\nTree stats: depth={stats['depth']} | "
-          f"nodes={stats['nodes']} (internal={stats['internal']}, leaves={stats['leaves']})")
+        p_train, p_test = train_test_split(p_data, test_ratio=0.2)
+        DEPTHS = [1, 3, 5, 7, 10, 15, 20, 30, None]
+        results = []
 
-    print("\nDecision tree:")
-    print_tree(tree)
+        for depth in DEPTHS:
+            p_tree = build_tree(p_train, p_features, 'move', max_depth=depth)
+            
+            # GERAR ÁRVORE DO POPOUT PARA VER NO VS CODE (SÓ PROFUNDIDADE 3)
+            if depth == 3:
+                export_to_vscode(p_tree, filename="arvore_popout_grafica_depth3", max_depth=3)
 
-    train_acc = evaluate(tree, train, 'class')
-    test_acc  = evaluate(tree, test,  'class')
-    print(f"\nTrain accuracy: {train_acc:.2%}")
-    print(f"Test accuracy:  {test_acc:.2%}")
+            train_acc = evaluate(p_tree, p_train, 'move')
+            test_acc = evaluate(p_tree, p_test, 'move')
+            results.append({'max_depth': depth, 'train_acc': train_acc, 'test_acc': test_acc})
+            
+            label = str(depth) if depth is not None else 'unlimited'
+            print(f"  > Depth {label:>9}: Test={test_acc:.2%}")
+
+        save_results(results, 'id3_popout_results.csv')
+        print("\n" + "=" * 40)
+        print("[SUCESSO] Abre os ficheiros .md no VS Code para veres os gráficos!")
+        print("=" * 40)
