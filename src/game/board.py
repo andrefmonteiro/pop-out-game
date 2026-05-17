@@ -80,7 +80,9 @@ class Board:
         if check(last_player): return last_player
         if check(self.current_player): return self.current_player
 
-        # Rule 2: draw if the board has no legal moves left
+        # Stalemate fallback: no DROPs and no POPs are legal → automatic draw.
+        # (Briefing Rule 2 — the "board full, player chooses pop or draw" rule —
+        # is enforced in Game.run / Game.run_silent via is_full() + Player.wants_draw().)
         if not self.get_legal_moves(): return 0
         
         # NOVO - Regra 3: Empate por tripla repetição (loops infinitos)
