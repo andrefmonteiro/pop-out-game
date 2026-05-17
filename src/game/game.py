@@ -24,6 +24,12 @@ class Game:
             print("\n" + "=" * 30)
             print(f"Player {self.board.current_player}'s turn")
             print(self.board)
+            # Rule 2: if the board is full, the player to move can declare a draw.
+            if self.board.is_full() and self.players[curr_idx].wants_draw(self.board):
+                print("\n" + "=" * 30)
+                print(self.board)
+                print("Draw declared by the player to move (Rule 2).")
+                break
             move = self.players[curr_idx].get_move(self.board, False)
             self.board = self.board.apply_move(move)
 
@@ -53,6 +59,9 @@ class Game:
         curr_player_idx = 0
         while True:
             curr_player = self.players[curr_player_idx]
+            # Rule 2: same draw-declaration option in silent mode (bots default to keep playing).
+            if self.board.is_full() and curr_player.wants_draw(self.board):
+                return 0
             move = curr_player.get_move(self.board, False)
             self.board = self.board.apply_move(move)
 

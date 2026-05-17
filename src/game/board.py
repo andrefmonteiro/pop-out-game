@@ -51,6 +51,11 @@ class Board:
         
         return new_board
 
+    def is_full(self) -> bool:
+        # No DROPs available means the board is full (top row has no empty cell).
+        # POPs may still be legal — Rule 2 lets the player to move pop or declare draw.
+        return not np.any(self.grid[0] == 0)
+
     def get_winner(self) -> int | None:
         # Player who just moved
         last_player = 3 - self.current_player

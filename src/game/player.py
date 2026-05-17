@@ -5,6 +5,11 @@ class Player:
     def get_move(self, board, is_game_drawable):
         pass
 
+    def wants_draw(self, board) -> bool:
+        # Rule 2: when the board is full, the player to move may declare a draw
+        # instead of popping. Default policy: keep playing.
+        return False
+
 class BotPlayer(Player):
     def __init__(self, config: MCTSConfig | None = None):
         # Default config keeps existing call sites (BotPlayer()) working;
@@ -15,6 +20,14 @@ class BotPlayer(Player):
         return mcts_search(board, self.config)
 
 class HumanPlayer(Player):
+    def wants_draw(self, board) -> bool:
+        print("\nThe board is full. You may POP or declare the game a draw.")
+        while True:
+            ans = input("Declare draw? (y/n): ").strip().lower()
+            if ans in ("y", "yes"): return True
+            if ans in ("n", "no"): return False
+            print("Please answer 'y' or 'n'.")
+
     def get_move(self, board, is_game_drawable) -> Move:
         legal = board.get_legal_moves()
         legal_set = {(m.move_type, m.col) for m in legal}
